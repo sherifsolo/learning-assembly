@@ -1,0 +1,64 @@
+     1                                  global _start
+     2                                  
+     3                                  section .text:
+     4                                  _start:
+     5 00000000 55                      	push ebp;
+     6 00000001 89E5                    	mov ebp, esp;
+     7 00000003 83EC10                  	sub esp, 16;
+     8 00000006 89E0                    	mov eax,esp;
+     9 00000008 C70000000000            	mov DWORD[eax], 0x0;
+    10 0000000E C744240401000000        	mov DWORD[esp+4], 0x1;
+    11 00000016 C744240800000000        	mov DWORD[esp+8], 0x0;
+    12 0000001E C644240C0A              	mov byte [esp+12], 0x0a;
+    13 00000023 C644240D0D              	mov byte [esp+13], 0x0d;
+    14 00000028 8D75F8                  	lea esi, [ebp-8];
+    15 0000002B BF00000000              	mov edi, 0;
+    16                                  loop:	
+    17 00000030 89F8                    	mov eax, edi;
+    18 00000032 E81F000000              	call print_int;
+    19 00000037 83F800                  	cmp eax,0;
+    20 0000003A 7447                    	jz exit_proc;
+    21 0000003C 8906                    	mov [esi], eax;
+    22 0000003E 89F8                    	mov eax, edi;
+    23 00000040 BB01000000              	mov ebx, 1;
+    24 00000045 E809000000              	call add;
+    25 0000004A 89C7                    	mov edi, eax;
+    26 0000004C 83FF09                  	cmp edi,9;
+    27 0000004F 7EDF                    	jle loop;
+    28 00000051 EB30                    	jmp exit_proc;
+    29                                  add:
+    30 00000053 01D8                    	add eax, ebx;
+    31 00000055 C3                      	ret
+    32                                  print_int:
+    33 00000056 E834000000              	call convert2_ascii;
+    34 0000005B 83F800                  	cmp eax,0;
+    35 0000005E 743D                    	jz bail;
+    36 00000060 8906                    	mov [esi], eax;
+    37 00000062 B804000000              	mov eax, 4;
+    38 00000067 BB01000000              	mov ebx, 1;
+    39 0000006C 8D0E                    	lea ecx, [esi];
+    40 0000006E BA06000000              	mov edx, 6;
+    41 00000073 CD80                    	int 0x80;
+    42 00000075 C3                      	ret
+    43                                  read:
+    44 00000076 B803000000              	mov eax,3;
+    45 0000007B BB00000000              	mov ebx, 0;
+    46 00000080 CD80                    	int 0x80;
+    47 00000082 C3                      	ret;
+    48                                  exit_proc:
+    49 00000083 BB00000000              	mov ebx,0;
+    50 00000088 B801000000              	mov eax,1;
+    51 0000008D CD80                    	int 0x80;
+    52                                  ;printing numbers in ascii start from 30 = 0 31=1 ....39,
+    53                                  ;10 -line feed 13 ---carriage return
+    54                                  
+    55                                  convert2_ascii:
+    56 0000008F 83F809                      cmp eax, 9        ;
+    57 00000092 7709                        ja  bail          ; 
+    58 00000094 83F800                      cmp eax, 0        ; 
+    59 00000097 7C04                        jl  bail          ; 
+    60 00000099 83C030                      add eax, 0x30     ; 
+    61 0000009C C3                          ret
+    62                                  bail:
+    63 0000009D B800000000              	mov eax,0;
+    64 000000A2 C3                      	ret;

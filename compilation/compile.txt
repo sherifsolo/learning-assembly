@@ -1,0 +1,2 @@
+nasm -f elf32 -o output_object_file.o input.asm
+ld -m elf_i386 -o output_executable_file output_object_file.o

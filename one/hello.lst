@@ -1,0 +1,42 @@
+     1                                  global _start
+     2                                  section .text:
+     3                                  
+     4                                  _start:
+     5 00000000 55                      	push ebp;
+     6 00000001 89E5                    	mov  ebp, esp;
+     7 00000003 50                      	push eax;
+     8 00000004 53                      	push ebx;
+     9 00000005 51                      	push ecx;
+    10 00000006 52                      	push edx;
+    11 00000007 89E0                    	mov eax, esp;
+    12 00000009 83EC0F                  	sub esp, 15;
+    13 0000000C C60000                  	mov BYTE[eax], 0x0;
+    14 0000000F C640FF0A                	mov BYTE[eax-1], 0xa;
+    15 00000013 C640FE21                	mov BYTE[eax-2], '!';
+    16 00000017 C640FD64                	mov BYTE[eax-3], 'd';
+    17 0000001B C640FC6C                	mov BYTE[eax-4], 'l';                                             
+    18 0000001F C640FB72                	mov BYTE[eax-5], 'r';
+    19 00000023 C640FA6F                	mov BYTE[eax-6], 'o';
+    20 00000027 C640F977                	mov BYTE[eax-7], 'w';
+    21 0000002B C640F820                	mov BYTE[eax-8], ' ';
+    22 0000002F C640F72C                	mov BYTE[eax-9], ',';
+    23 00000033 C640F66F                	mov BYTE[eax-10], 'o';
+    24 00000037 C640F56C                	mov BYTE[eax-11], 'l';
+    25 0000003B C640F46C                	mov BYTE[eax-12], 'l';
+    26 0000003F C640F365                	mov BYTE[eax-13], 'e';
+    27 00000043 C640F268                	mov BYTE[eax-14], 'h';
+    28 00000047 B804000000              	mov eax, 0x4;
+    29 0000004C BB01000000              	mov ebx, 0x1;
+    30 00000051 89E1                    	mov ecx, esp;
+    31 00000053 BA0E000000              	mov edx, 0xe;
+    32 00000058 CD80                    	int 0x80;
+    33 0000005A 83C40F                  	add esp, 15;
+    34                                  quit:
+    35 0000005D 5A                      	pop edx;
+    36 0000005E 59                      	pop ecx;
+    37 0000005F 5B                      	pop ebx;
+    38 00000060 58                      	pop eax
+    39 00000061 89EC                    	mov esp, ebp;
+    40 00000063 B801000000              	mov eax,0x1;
+    41 00000068 BB00000000              	mov ebx,0x0;
+    42 0000006D CD80                    	int 0x80;
