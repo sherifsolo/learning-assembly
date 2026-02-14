@@ -1,0 +1,285 @@
+     1                                  global _start
+     2                                  section .data:
+     3 00000000 0A0D                    newline db 0x0a,0x0d
+     4 00000002 7C                      vseparator db 0x7c
+     5 00000003 71                      hseparator db 0x71
+     6 00000004 01                      player1 db 1
+     7 00000005 02                      player2 db 2
+     8 00000006 5468652077696E6E65-     winmsg db  "The winner is palayer: ", 0x0a, 0x0d, 0x00
+     8 0000000F 722069732070616C61-
+     8 00000018 7965723A200A0D00   
+     9                                  winmsglen equ $-winmsg 
+    10 00000020 544943544143544F45-     wlcmmsg db "TICTACTOE::::Player one(1), choose your character X or O: ", 0x0a, 0x0d, 0x00
+    10 00000029 3A3A3A3A506C617965-
+    10 00000032 72206F6E652831292C-
+    10 0000003B 2063686F6F73652079-
+    10 00000044 6F7572206368617261-
+    10 0000004D 637465722058206F72-
+    10 00000056 204F3A200A0D00     
+    11                                  wlcmmsglen equ $-wlcmmsg
+    12 0000005D 576869636820626F78-     playerprompt db "Which box do you want to mark: ", 0x0a, 0x0d, 0x00
+    12 00000066 20646F20796F752077-
+    12 0000006F 616E7420746F206D61-
+    12 00000078 726B3A200A0D00     
+    13                                  playerpromptlen equ $-playerprompt
+    14 0000007F 47616D65204F766572-     gameover db "Game Over.", 0x0a, 0x0d, 0x00
+    14 00000088 2E0A0D00           
+    15                                  gameoverlen equ $-gameover
+    16 0000008C 47616D65206F766572-     draw db "Game over, Draw no winner.", 0x0a, 0x0d, 0x00
+    16 00000095 2C2044726177206E6F-
+    16 0000009E 2077696E6E65722E0A-
+    16 000000A7 0D00               
+    17                                  drawlen equ $-draw
+    18 000000A9 446F20796F75207761-     restart db "Do you want to play another game(y/n): ", 0x0a, 0x0d, 0x00
+    18 000000B2 6E7420746F20706C61-
+    18 000000BB 7920616E6F74686572-
+    18 000000C4 2067616D6528792F6E-
+    18 000000CD 293A200A0D00       
+    19                                  restartlen equ $-restart
+    20                                  section .bss
+    21 00000000 <res 9h>                board resb 9
+    22 00000009 ????                    player1char dw  ?
+    23 0000000B ????                    player2char dw  ?
+    24 0000000D ??                      winner db  ?
+    25 0000000E ????                    chosenbox dw ?
+    26 00000010 ????                    chosenchar dw ?
+    27 00000012 ??                      currentplayer db ?
+    28                                  section .text:
+    29                                  _start:
+    30 00000000 55                      	push ebp,
+    31 00000001 89E5                    	mov ebp, esp;
+    32                                  teststart:
+    33 00000003 C605[12000000]01        	mov byte [currentplayer], 1;
+    34 0000000A E857000000              	call populateborad;
+    35 0000000F E814000000              	call printwelcomemsg;
+    36 00000014 E87A000000              	call printboard;
+    37 00000019 BE00000000              	mov esi, 0;
+    38 0000001E E8E0000000              	call mainloop;
+    39 00000023 E949020000              	jmp quit;
+    40                                  printwelcomemsg:
+    41 00000028 55                      	push ebp;
+    42 00000029 89E5                    	mov ebp, esp;
+    43 0000002B 8D0D[20000000]          	lea ecx, wlcmmsg
+    44 00000031 BA3D000000              	mov edx, wlcmmsglen;
+    45 00000036 E80C020000              	call print;
+    46 0000003B 8D0D[09000000]          	lea ecx, player1char;
+    47 00000041 BA02000000              	mov edx, 2;
+    48 00000046 E811020000              	call read;
+    49 0000004B 803D[09000000]58        	cmp byte [player1char], 'X';
+    50 00000052 7409                    	jz setplayer2charO;
+    51 00000054 C605[0B000000]58        	mov byte [player2char], 'X';
+    52 0000005B EB07                    	jmp retmain;
+    53                                  setplayer2charO:
+    54 0000005D C605[0B000000]4F        	mov byte [player2char], 'O';
+    55                                  retmain:
+    56 00000064 5D                      	pop ebp;
+    57 00000065 C3                      	ret;
+    58                                  populateborad:
+    59 00000066 55                      	push ebp;
+    60 00000067 89E5                    	mov ebp, esp;
+    61 00000069 50                      	push eax;
+    62 0000006A 53                      	push ebx;
+    63 0000006B 51                      	push ecx;
+    64 0000006C 56                      	push esi;
+    65 0000006D BE[00000000]            	mov esi, board;
+    66 00000072 B900000000              	mov ecx, 0;
+    67 00000077 BB30000000              	mov ebx, 0x30;
+    68                                  poploop:
+    69 0000007C 891C0E                  	mov [esi + ecx], ebx;
+    70 0000007F 41                      	inc ecx;
+    71 00000080 83C301                  	add ebx, 1;
+    72 00000083 83F909                  	cmp ecx, 9;
+    73 00000086 7CF4                    	jl poploop;
+    74 00000088 C6440E0100              	mov byte [esi +ecx +1], 0x0;
+    75 0000008D 5E                      	pop esi;
+    76 0000008E 59                      	pop ecx;
+    77 0000008F 5B                      	pop ebx;
+    78 00000090 58                      	pop eax;
+    79 00000091 5D                      	pop ebp;
+    80 00000092 C3                      	ret;
+    81                                  printboard:
+    82 00000093 55                      	push ebp;
+    83 00000094 89E5                    	mov ebp,esp;
+    84 00000096 50                      	push eax;
+    85 00000097 53                      	push ebx;
+    86 00000098 51                      	push ecx;
+    87 00000099 52                      	push edx;
+    88 0000009A BA02000000              	mov edx, 2;
+    89 0000009F 8D0D[00000000]          	lea ecx, newline
+    90 000000A5 E89D010000              	call print;
+    91 000000AA 8D35[00000000]          	lea esi, board;
+    92 000000B0 89F1                    	mov ecx, esi;
+    93 000000B2 BA01000000              	mov edx, 1;
+    94 000000B7 BF00000000              	mov edi, 0;
+    95 000000BC BE03000000              	mov esi, 3;
+    96                                  boardloop:	 
+    97 000000C1 E881010000              	call print;
+    98 000000C6 51                      	push ecx;
+    99 000000C7 8D0D[02000000]          	lea ecx, vseparator;
+   100 000000CD E875010000              	call print;
+   101 000000D2 59                      	pop ecx;
+   102 000000D3 83C101                  	add ecx, 1;
+   103 000000D6 83C701                  	add edi, 1;
+   104 000000D9 39F7                    	cmp edi, esi;
+   105 000000DB 7407                    	je printnewline;
+   106                                  cont:
+   107 000000DD 83FF09                  	cmp edi, 9;
+   108 000000E0 7CDF                    	jl boardloop;
+   109 000000E2 EB19                    	jmp exitboardloop;
+   110                                  printnewline:
+   111 000000E4 51                      	push ecx;
+   112 000000E5 52                      	push edx;
+   113 000000E6 83C603                  	add esi, 3;
+   114 000000E9 8D0D[00000000]          	lea ecx, newline;
+   115 000000EF BA02000000              	mov edx, 2;
+   116 000000F4 E84E010000              	call print;
+   117 000000F9 5A                      	pop edx;
+   118 000000FA 59                      	pop ecx;
+   119 000000FB EBE0                    	jmp cont;
+   120                                  exitboardloop:
+   121 000000FD 5A                      	pop edx;
+   122 000000FE 59                      	pop ecx;
+   123 000000FF 5B                      	pop ebx;
+   124 00000100 58                      	pop eax;
+   125 00000101 5D                      	pop ebp;
+   126 00000102 C3                      	ret;
+   127                                  mainloop:
+   128 00000103 E823000000              	call promptbox;
+   129 00000108 803D[0E000000]39        	cmp byte [chosenbox], 0x39;
+   130 0000010F 0F875C010000            	ja quit;
+   131 00000115 E836000000              	call updateboard;
+   132 0000011A E874FFFFFF              	call printboard;
+   133 0000011F 46                      	inc esi;
+   134 00000120 83FE09                  	cmp esi, 9;
+   135 00000123 0F84D1000000            	je printnowinner;
+   136 00000129 EBD8                    	jmp mainloop;
+   137                                  promptbox:
+   138 0000012B 55                      	push ebp;
+   139 0000012C 89E5                    	mov ebp, esp;
+   140 0000012E 8D0D[5D000000]          	lea ecx, playerprompt;
+   141 00000134 BA22000000              	mov edx, playerpromptlen;
+   142 00000139 E809010000              	call print;
+   143 0000013E 8D0D[0E000000]          	lea ecx, chosenbox;
+   144 00000144 BA02000000              	mov edx, 2;
+   145 00000149 E80E010000              	call read;
+   146 0000014E 5D                      	pop ebp;
+   147 0000014F C3                      	ret
+   148                                  updateboard:
+   149 00000150 55                      	push ebp;
+   150 00000151 50                      	push eax;
+   151 00000152 53                      	push ebx;
+   152 00000153 51                      	push ecx;
+   153 00000154 52                      	push edx;
+   154 00000155 56                      	push esi;
+   155 00000156 57                      	push edi;
+   156 00000157 8D3D[00000000]          	lea edi, board;
+   157 0000015D BE[10000000]            	mov esi, chosenchar;
+   158 00000162 E81A000000              	call selectplayer;
+   159 00000167 8906                    	mov [esi], eax;
+   160 00000169 66A1[0E000000]          	mov ax, word [chosenbox];
+   161 0000016F 2C30                    	sub al, 0x30;
+   162 00000171 0FB6C0                  	movzx eax, al; 
+   163 00000174 8A1E                    	mov bl, [esi];
+   164 00000176 881C07                  	mov byte [edi+eax], bl;
+   165 00000179 5F                      	pop edi;
+   166 0000017A 5E                      	pop esi;
+   167 0000017B 5A                      	pop edx;
+   168 0000017C 59                      	pop ecx;
+   169 0000017D 5B                      	pop ebx;
+   170 0000017E 58                      	pop eax;
+   171 0000017F 5D                      	pop ebp
+   172 00000180 C3                      	ret;
+   173                                  selectplayer:
+   174 00000181 55                      	push ebp;
+   175 00000182 89E5                    	mov ebp, esp;
+   176 00000184 803D[12000000]01        	cmp byte [currentplayer], 1;
+   177 0000018B 7F0E                    	jg selectplayer2;
+   178 0000018D A1[09000000]            	mov eax, [player1char];
+   179 00000192 8005[12000000]01        	add byte [currentplayer], 1;
+   180 00000199 EB0C                    	jmp retselectedplayer; 
+   181                                  selectplayer2:
+   182 0000019B A1[0B000000]            	mov eax, [player2char];
+   183 000001A0 802D[12000000]01        	sub byte [currentplayer], 1;
+   184                                  retselectedplayer:
+   185 000001A7 5D                      	pop ebp;
+   186 000001A8 C3                      	ret;
+   187                                  printgameover:
+   188 000001A9 55                      	push ebp;
+   189 000001AA 89E5                    	mov ebp, esp;
+   190 000001AC 50                      	push eax;
+   191 000001AD 53                      	push ebx;
+   192 000001AE 51                      	push ecx;
+   193 000001AF 52                      	push edx;
+   194 000001B0 B9[7F000000]            	mov ecx, gameover;
+   195 000001B5 BA0D000000              	mov edx, gameoverlen;
+   196 000001BA E888000000              	call print;
+   197 000001BF B9[A9000000]            	mov ecx, restart;
+   198 000001C4 BA2A000000              	mov edx, restartlen;
+   199 000001C9 E879000000              	call print;
+   200 000001CE B9[10000000]            	mov ecx, chosenchar;
+   201 000001D3 66C7010000              	mov word [ecx], 0;
+   202 000001D8 BA01000000              	mov edx, 1;
+   203 000001DD E87A000000              	call read;
+   204 000001E2 803D[10000000]79        	cmp byte[chosenchar], 'y';
+   205 000001E9 0F8582000000            	jne quit;
+   206 000001EF 5A                      	pop edx;
+   207 000001F0 59                      	pop ecx;
+   208 000001F1 5B                      	pop ebx;
+   209 000001F2 58                      	pop eax;
+   210 000001F3 5D                      	pop ebp;
+   211 000001F4 E90AFEFFFF              	jmp teststart;
+   212 000001F9 C3                      	ret;	
+   213                                  printnowinner:
+   214 000001FA 55                      	push ebp;
+   215 000001FB 89E5                    	mov ebp, esp;
+   216 000001FD 50                      	push eax;
+   217 000001FE 53                      	push ebx;
+   218 000001FF 51                      	push ecx;
+   219 00000200 52                      	push edx;
+   220 00000201 B9[8C000000]            	mov ecx, draw;
+   221 00000206 BA1D000000              	mov edx, drawlen;
+   222 0000020B E837000000              	call print;
+   223 00000210 B9[A9000000]            	mov ecx, restart;
+   224 00000215 BA2A000000              	mov edx, restartlen;
+   225 0000021A E828000000              	call print;
+   226 0000021F B9[10000000]            	mov ecx, chosenchar;
+   227 00000224 66C7010000              	mov word [ecx], 0;
+   228 00000229 BA01000000              	mov edx, 1;
+   229 0000022E E829000000              	call read;
+   230 00000233 803D[10000000]79        	cmp byte[chosenchar], 'y';
+   231 0000023A 7535                    	jne quit;
+   232 0000023C 5A                      	pop edx;
+   233 0000023D 59                      	pop ecx;
+   234 0000023E 5B                      	pop ebx;
+   235 0000023F 58                      	pop eax;
+   236 00000240 5D                      	pop ebp;
+   237 00000241 E9BDFDFFFF              	jmp teststart;
+   238 00000246 C3                      	ret;
+   239                                  print:	
+   240 00000247 55                      	push ebp;
+   241 00000248 89E5                    	mov ebp,esp;
+   242 0000024A 50                      	push eax;
+   243 0000024B 53                      	push ebx;
+   244 0000024C B804000000              	mov eax, 4;
+   245 00000251 BB01000000              	mov ebx, 1;
+   246 00000256 CD80                    	int 0x80;
+   247 00000258 5B                      	pop ebx;
+   248 00000259 58                      	pop eax;
+   249 0000025A 5D                      	pop ebp;
+   250 0000025B C3                      	ret;
+   251                                  read:
+   252 0000025C 55                      	push ebp;
+   253 0000025D 89E5                    	mov ebp, esp;
+   254 0000025F 50                      	push eax;
+   255 00000260 53                      	push ebx;
+   256 00000261 BB02000000              	mov ebx,2;
+   257 00000266 B803000000              	mov eax, 3;
+   258 0000026B CD80                    	int 0x80;
+   259 0000026D 5B                      	pop ebx;
+   260 0000026E 58                      	pop eax;
+   261 0000026F 5D                      	pop ebp
+   262 00000270 C3                      	ret;
+   263                                  quit:
+   264 00000271 B801000000              	mov eax, 1;
+   265 00000276 BB00000000              	mov ebx, 0;
+   266 0000027B CD80                    	int 0x80;
